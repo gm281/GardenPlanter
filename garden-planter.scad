@@ -18,6 +18,7 @@ module circularWall(radius, width, depth, height_array, start_angle=0, end_angle
     for (i = [0:number_of_elements-1]) {
         fi=real_total_angle*(i+0.5)/number_of_elements+real_start_angle;
         height=array_interpolate(height_array, i, number_of_elements);
+        echo("Element idx: ", i, ", height: ", height);
         translate([-radius*cos(fi), radius*sin(fi), height/2]) {
             rotate([0, 0, -fi]) {
                 cube([depth,width*1.0,height], center=true);
@@ -58,7 +59,7 @@ module benchWall(width, depth, height_array, radius, y_displacement, half_angle)
 radius=3850/2-1;
 width=200;
 depth=100;
-bench_width=width*2+depth;
+bench_width=450;
 cut_radius=radius+bench_width-400;
 cut_displacement=cut_radius-1000;
 bench_wall_angle=50.75;
@@ -74,10 +75,19 @@ function multi_array_interpolation(multi_array, index) =
 /* 35 */
 back_wall_multi_array=[
     [50, 50, 7],
-    [50, 400, 3],
+    [50, 100, 2],
+    [75, 280, 2],
     [400, 850, 6],
-    [850, 1500, 39],
-    [1500, 400, 5],
+    [850, 1500, 40],
+    [280,280,2],
+    [100,100,2],
+//    [850, 1500, 35],
+//    [1500, 1480, 2],
+//    [1450, 1420, 2],
+//    [1420, 1320, 2],
+//    [1320, 1150, 2],
+//    [1200, 100, 4],
+//    [100, 50, 2],
     [50, 50, 100]
 ];
 

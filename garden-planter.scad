@@ -161,11 +161,13 @@ back_wall_interpolation(61),
     ];
 circularWall(radius, width, depth, height_array ,-90, 270);
 cutCircularWall(radius, cut_radius, radius, width, depth, [850,850], cut_displacement);
+echo("Bench walls center offset: ", cut_displacement);
+echo("Outer bench wall radius: ", cut_radius);
 front_wall_height_array=[400, 400, 400, 400,
                          400, 400, 400, 400,
                          400, 400, 400, 400,
                          400, 400, 400, 400];
-echo("inner wall radius: ", cut_radius-bench_width);
+echo("Inner bench wall radius: ", cut_radius-bench_width);
 cutCircularWall(radius, cut_radius-bench_width, radius, width, depth, front_wall_height_array, cut_displacement);
 bench_height_array=[550,550];
 //benchWall(width, depth, bench_height_array, cut_radius-bench_width+width/2+depth/2, cut_displacement, bench_wall_angle);

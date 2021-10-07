@@ -56,11 +56,11 @@ module benchWall(width, depth, height_array, radius, y_displacement, half_angle)
     }
 }
 
-radius=3850/2-1;
+radius=4040/2;
 width=200;
 depth=100;
 bench_width=450;
-cut_radius=radius+bench_width-400;
+cut_radius=radius+bench_width-350;
 cut_displacement=cut_radius-1000;
 bench_wall_angle=50.75;
 
@@ -74,11 +74,11 @@ function multi_array_interpolation(multi_array, index) =
    
 /* 35 */
 back_wall_multi_array=[
-    [50, 50, 7],
+    [50, 50, 8],
     [50, 100, 2],
     [75, 280, 2],
-    [400, 850, 6],
-    [850, 1500, 40],
+    [290, 850, 6],
+    [850, 1500, 41],
     [280,280,2],
     [100,100,2],
 //    [850, 1500, 35],
@@ -158,6 +158,9 @@ back_wall_interpolation(58),
 back_wall_interpolation(59),
 back_wall_interpolation(60),
 back_wall_interpolation(61),
+back_wall_interpolation(62),
+back_wall_interpolation(63),
+back_wall_interpolation(64)
     ];
 circularWall(radius, width, depth, height_array ,-90, 270);
 cutCircularWall(radius, cut_radius, radius, width, depth, [850,850], cut_displacement);

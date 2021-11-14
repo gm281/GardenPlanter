@@ -1,3 +1,6 @@
 [submodule "dotSCAD"]
 	path = dotSCAD
 	url = https://github.com/JustinSDK/dotSCAD.git
+[submodule "Round-Anything"]
+	path = Round-Anything
+	url = https://github.com/Irev-Dev/Round-Anything.git

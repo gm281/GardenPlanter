@@ -18,7 +18,7 @@ module circularWall(radius, width, depth, height_array, start_angle=0, end_angle
     for (i = [0:number_of_elements-1]) {
         fi=real_total_angle*(i+0.5)/number_of_elements+real_start_angle;
         height=array_interpolate(height_array, i, number_of_elements);
-        echo("Element idx: ", i, ", height: ", height);
+        //echo("Element idx: ", i, ", height: ", height);
         translate([-radius*cos(fi), radius*sin(fi), height/2]) {
             rotate([0, 0, -fi]) {
                 cube([depth,width*1.0,height], center=true);

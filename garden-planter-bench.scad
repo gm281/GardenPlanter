@@ -39,7 +39,7 @@ Calculations:
 * angle for each seat is: 90.57*2/8 = 22.6 degrees
 */
 
-tmp_reduction_factor=4;
+tmp_reduction_factor=1;
 bench_front_angle=90.5682 * 2/tmp_reduction_factor;
 bench_back_angle=69.4313 * 2/tmp_reduction_factor;
 number_of_seats=8/tmp_reduction_factor;
@@ -50,7 +50,7 @@ base_overhang=30;
 seat_overhang=30;
 base_back_hight_delta=30;
 base_thickness=18;
-additional_base_thickness=40;
+additional_base_thickness=50;
 
 
 module base_panel(additional_base_back_factor=2) {
@@ -95,12 +95,15 @@ module base_panel(additional_base_back_factor=2) {
     }
 }
 
+module single_base() {
+    translate([0,cos(seat_angle/2)*(inner_bench_wall_radius-base_overhang),0]) {
+        base_panel();
+    }
+}
 module base() {
     for (i = [0:number_of_seats-1]) {
         rotate([0,0,(-number_of_seats/2+0.5+i)*seat_angle]) {
-            translate([0,cos(seat_angle/2)*(inner_bench_wall_radius-base_overhang),0]) {
-                base_panel();
-            }
+            single_base();
         }
     }
 }
@@ -108,57 +111,44 @@ module base() {
 //base();
 
 
-bench_width=outer_bench_wall_radius-inner_bench_wall_radius;
+
+
 bench_height=80;
-seat_lip_height=30;
-/*
-bench_cross_section_points=[
-    [0,-seat_lip_height,0],
-    [bench_width+base_overhang+seat_overhang, -seat_lip_height,0],
-    [bench_width+base_overhang+seat_overhang, bench_height,20],
-    [0, bench_height,0],
-];
-*/
-bench_cross_section_points=[
-    [-(bench_width+base_overhang+seat_overhang),-seat_lip_height,0],
-    [0, -seat_lip_height,0],
-    [0, bench_height,20],
-    [-(bench_width+base_overhang+seat_overhang), bench_height,0],
-];
-bench_cross_section=polyRound(bench_cross_section_points,100);
-
-
-width = 2;
-/*
-bench_flow_points=[
-    [0, 0, 0],
-    [40, 60, 35],
-    [-50, 70, 0],
-    [20, 150, -35],
-    [30, 50, -3]
-];
-*/
-bench_flow_points=[
-    [0 , 0, -100],
-    [0 , 0, 0],
-    [0, 0, 100],
-    [0, -10, 200],
-    [0, -20, 300],
-    [0, -40, 400],
-    [0, -80, 500],
-    [0, -40, 600],
-    [0, -20, 700],
-    [0, -10, 800],
-    [0, 0, 900],
-    [0, 0, 1000],
-    [0, 0, 1100],
-];
-
-bench_flow_path = bezier_curve(0.05, bench_flow_points);
-
+seat_lip_height=25;
 seat_back_width=2*PI*outer_bench_wall_radius*seat_angle/360;
 
-module seat_flow() {
+
+module seat_flow() {  
+    bench_width=outer_bench_wall_radius-inner_bench_wall_radius;
+    bench_cross_section_points=[
+        [-(bench_width+base_overhang+seat_overhang),-seat_lip_height,0],
+        [0, -seat_lip_height,0],
+        [0, bench_height,0],
+        [-(bench_width+base_overhang+seat_overhang), bench_height,0],
+    ];
+    bench_cross_section=polyRound(bench_cross_section_points,100);
+
+    bench_flow_points=[
+        [0 , 0, -100],
+        [0 , 0, 0],
+        [0 , 0, 50],
+        [0, 0, 100],
+        [0, -20, 150],
+        [0, -20, 200],
+        [0, -20, 300],
+        [0, -30, 400],
+        [0, -30, 500],
+        [0, -30, 600],
+        [0, -20, 700],
+        [0, -20, 800],
+        [0, -20, 850],
+        [0, 0, 900],
+        [0, 0, 940],
+        [0, 0, 1000],
+        [0, 0, 1100],
+    ];
+    bench_flow_path = bezier_curve(0.05, bench_flow_points);
+    
     scale([seat_back_width/1000,1,1]) {
         intersection() {
             rotate([0,90,0])
@@ -171,12 +161,89 @@ module seat_flow() {
     }
 }
 
-bend_frags=24;
-bend_frag_width = seat_back_width / bend_frags;
-bend_frag_angle = seat_angle / bend_frags;
-bend_half_frag_width = 0.5 * bend_frag_width;
-bend_half_frag_angle = 0.5 * bend_frag_angle;
-bend_r = bend_half_frag_width / sin(bend_half_frag_angle);
+module bent_seat_flow() {
+    bend_frags=24;
+    bend_frag_width = seat_back_width / bend_frags;
+    bend_frag_angle = seat_angle / bend_frags;
+    bend_half_frag_width = 0.5 * bend_frag_width;
+    bend_half_frag_angle = 0.5 * bend_frag_angle;
+    bend_r = bend_half_frag_width / sin(bend_half_frag_angle);
+    
+    bench_width=outer_bench_wall_radius-inner_bench_wall_radius;
+
+    translate([0,0,bench_height])
+    rotate([0,0,270])
+    rotate([0,180,0])
+    translate([-bend_r,0,0])
+    rotate([0,0,-seat_angle/2])
+    bend(size = [seat_back_width, bench_height+seat_lip_height, bench_width+base_overhang+seat_overhang], angle = seat_angle, frags=bend_frags)
+    translate([0,bench_height,0])
+    rotate([90,0,0])
+    seat_flow();
+}
+
+//bent_seat_flow();
+//translate([-seat_back_width/2,0,0])
+//seat_flow();
+
+echo("Seat width: ", seat_back_width);
+ctrl_pts = [
+    [[000, 000, -000], [100, 000, -000], [200, 000, -000], [300, 000, -000], [400, 000, -000], [500, 000, -000]],
+    [[000, 010, -000], [100, 010, -000], [200, 010, -000], [300, 010, -000], [400, 010, -000], [500, 010, -000]],
+    [[000, 050, -000], [100, 050, -045], [200, 050, -045], [300, 050, -045], [400, 050, -045], [500, 050, -000]],
+    [[000, 075, -000], [100, 075, -045], [200, 075, -045], [300, 075, -045], [400, 075, -045], [500, 075, -000]],
+    [[000, 100, -000], [100, 100, -045], [200, 100, -045], [300, 100, -045], [400, 100, -045], [500, 100, -000]],
+    [[000, 200, -000], [100, 200, -045], [200, 200, -035], [300, 200, -035], [400, 200, -045], [500, 200, -000]],
+    [[000, 300, -000], [100, 300, -035], [200, 300, -035], [300, 300, -035], [400, 300, -035], [500, 300, -000]],
+    [[000, 400, -000], [100, 400, -015], [200, 400, -005], [300, 400, -005], [400, 400, -015], [500, 400, -000]],
+    [[000, 500, -000], [100, 500, -025], [200, 500, -015], [300, 500, -015], [400, 500, -025], [500, 500, -000]],
+    [[000, 550, -000], [100, 550, -045], [200, 550, -035], [300, 550, -035], [400, 550, -045], [500, 550, -000]],
+];
+
+thickness = 60;
+t_step = 0.05;
+
+bezier_pts = [for(i = [0:len(ctrl_pts) - 1]) 
+    bezier_curve(t_step, ctrl_pts[i])
+]; 
+
+g_pts = [for(j = [0:len(bezier_pts[0]) - 1]) 
+    bezier_curve(t_step, 
+        [for(i = [0:len(bezier_pts) - 1]) bezier_pts[i][j]]
+    ) 
+];
+
+
+module single_seat() {
+    difference() {
+        bent_seat_flow();
+            
+        translate([250,0,thickness/2+bench_height-10])
+        rotate([0,0,180])
+        sf_thicken(g_pts, thickness);
+    }
+}
+
+difference() {
+scale([0.99,1,1])
+translate([0,outer_bench_wall_radius,0])   
+single_seat();
+    
+translate([0,0,6])
+single_base();
+}
+
+/*
+for (i = [0:number_of_seats-1]) {
+    rotate([0,0,(-number_of_seats/2+0.5+i)*seat_angle]) {
+        translate([0,outer_bench_wall_radius,0])   
+            bent_seat_flow();
+    }
+}
+*/
+
+
+/*
 
 difference() {
     for (i = [0:number_of_seats-1]) {
@@ -196,7 +263,7 @@ seat_flow();
 rotate([0,0,90])        
 base();
     }
-
+*/
 
 // Next steps:
 // * figure out how to move to the origin + align with axis

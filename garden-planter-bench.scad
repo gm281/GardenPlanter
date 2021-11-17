@@ -38,15 +38,17 @@ Calculations:
 
 * angle for each seat is: 90.57*2/8 = 22.6 degrees
 */
-bench_front_angle=90.5682 * 2;
-bench_back_angle=69.4313 * 2;
-number_of_seats=8;
+
+tmp_reduction_factor=4;
+bench_front_angle=90.5682 * 2/tmp_reduction_factor;
+bench_back_angle=69.4313 * 2/tmp_reduction_factor;
+number_of_seats=8/tmp_reduction_factor;
 seat_angle=bench_front_angle / number_of_seats;
 inner_bench_wall_radius=1670;
 outer_bench_wall_radius=2120;
 base_overhang=30;
 seat_overhang=30;
-base_back_hight_delta=100;
+base_back_hight_delta=30;
 base_thickness=18;
 additional_base_thickness=40;
 
@@ -107,7 +109,7 @@ module base() {
 
 
 bench_width=outer_bench_wall_radius-inner_bench_wall_radius;
-bench_height=50;
+bench_height=80;
 seat_lip_height=30;
 /*
 bench_cross_section_points=[
@@ -126,8 +128,6 @@ bench_cross_section_points=[
 bench_cross_section=polyRound(bench_cross_section_points,100);
 
 
-t_step_1 = 0.05;
-t_step_2 = 0.05;
 width = 2;
 /*
 bench_flow_points=[
@@ -154,24 +154,49 @@ bench_flow_points=[
     [0, 0, 1100],
 ];
 
-bench_flow_path = bezier_curve(t_step_2, bench_flow_points);
+bench_flow_path = bezier_curve(0.05, bench_flow_points);
+
+seat_back_width=2*PI*outer_bench_wall_radius*seat_angle/360;
 
 module seat_flow() {
-    intersection() {
-        rotate([0,90,0])
-            rotate([0,0,90])
-                path_extrude(bench_cross_section, bench_flow_path, method = "AXIS_ANGLE");
-            
-        translate([0,-250,-500])
-            cube([1000,1000,1000]);
+    scale([seat_back_width/1000,1,1]) {
+        intersection() {
+            rotate([0,90,0])
+                rotate([0,0,90])
+                    path_extrude(bench_cross_section, bench_flow_path, method = "AXIS_ANGLE");
+                
+            translate([0,-250,-500])
+                cube([1000,1000,1000]);
+        }
     }
 }
 
+bend_frags=24;
+bend_frag_width = seat_back_width / bend_frags;
+bend_frag_angle = seat_angle / bend_frags;
+bend_half_frag_width = 0.5 * bend_frag_width;
+bend_half_frag_angle = 0.5 * bend_frag_angle;
+bend_r = bend_half_frag_width / sin(bend_half_frag_angle);
 
-bend(size = [1000, bench_height+seat_lip_height, bench_width+base_overhang+seat_overhang], angle = seat_angle)
+difference() {
+    for (i = [0:number_of_seats-1]) {
+        rotate([0,0,(-number_of_seats/2+0.5+i)*seat_angle]) {
+
+translate([-outer_bench_wall_radius,0,0])
+translate([0,0,bench_height])
+rotate([0,180,0])
+translate([-bend_r,0,0])
+rotate([0,0,-seat_angle/2])
+bend(size = [seat_back_width, bench_height+seat_lip_height, bench_width+base_overhang+seat_overhang], angle = seat_angle, frags=bend_frags)
 translate([0,bench_height,0])
 rotate([90,0,0])
 seat_flow();
+            
+        }}
+rotate([0,0,90])        
+base();
+    }
+
 
 // Next steps:
 // * figure out how to move to the origin + align with axis

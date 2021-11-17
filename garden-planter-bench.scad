@@ -1,5 +1,6 @@
 use <dotSCAD/src/path_extrude.scad>;
 use <dotSCAD/src/bezier_curve.scad>;
+use <dotSCAD/src/bend.scad>;
 use <Round-Anything/polyround.scad>;
 use <dotSCAD/src/surface/sf_thicken.scad>;
 
@@ -105,32 +106,76 @@ module base() {
 //base();
 
 
+bench_width=outer_bench_wall_radius-inner_bench_wall_radius;
+bench_height=50;
+seat_lip_height=30;
+/*
+bench_cross_section_points=[
+    [0,-seat_lip_height,0],
+    [bench_width+base_overhang+seat_overhang, -seat_lip_height,0],
+    [bench_width+base_overhang+seat_overhang, bench_height,20],
+    [0, bench_height,0],
+];
+*/
+bench_cross_section_points=[
+    [-(bench_width+base_overhang+seat_overhang),-seat_lip_height,0],
+    [0, -seat_lip_height,0],
+    [0, bench_height,20],
+    [-(bench_width+base_overhang+seat_overhang), bench_height,0],
+];
+bench_cross_section=polyRound(bench_cross_section_points,100);
+
+
 t_step_1 = 0.05;
 t_step_2 = 0.05;
 width = 2;
+/*
+bench_flow_points=[
+    [0, 0, 0],
+    [40, 60, 35],
+    [-50, 70, 0],
+    [20, 150, -35],
+    [30, 50, -3]
+];
+*/
+bench_flow_points=[
+    [0 , 0, -100],
+    [0 , 0, 0],
+    [0, 0, 100],
+    [0, -10, 200],
+    [0, -20, 300],
+    [0, -40, 400],
+    [0, -80, 500],
+    [0, -40, 600],
+    [0, -20, 700],
+    [0, -10, 800],
+    [0, 0, 900],
+    [0, 0, 1000],
+    [0, 0, 1100],
+];
 
-p0 = [0, 0, 0];
-p1 = [40, 60, 35];
-p2 = [-50, 70, 0];
-p3 = [20, 150, -35];
-p4 = [30, 50, -3];
+bench_flow_path = bezier_curve(t_step_2, bench_flow_points);
 
-shape_pts = 
-bezier_curve(t_step_1,
-[   
-    [5, -5],
-    [3, 4],
-    [0, 5],
-    [-5, -5] 
-]
-);
-
-path_pts = bezier_curve(t_step_2, 
-    [p0, p1, p2, p3, p4]
-);
+module seat_flow() {
+    intersection() {
+        rotate([0,90,0])
+            rotate([0,0,90])
+                path_extrude(bench_cross_section, bench_flow_path, method = "AXIS_ANGLE");
+            
+        translate([0,-250,-500])
+            cube([1000,1000,1000]);
+    }
+}
 
 
-path_extrude(shape_pts, path_pts);
+bend(size = [1000, bench_height+seat_lip_height, bench_width+base_overhang+seat_overhang], angle = seat_angle)
+translate([0,bench_height,0])
+rotate([90,0,0])
+seat_flow();
+
+// Next steps:
+// * figure out how to move to the origin + align with axis
+// * scale the size of the seat so that it takes up the expected amount of space (this will likely be the same task as the above, as the radius of the bend will need to be matched). Start with this. Look at how bend.scad calculates the bend radius.
 
 /*
 ctrl_pts = [

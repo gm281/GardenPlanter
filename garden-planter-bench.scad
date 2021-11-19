@@ -1,8 +1,8 @@
-use <dotSCAD/src/path_extrude.scad>;
-use <dotSCAD/src/bezier_curve.scad>;
-use <dotSCAD/src/bend.scad>;
-use <Round-Anything/polyround.scad>;
-use <dotSCAD/src/surface/sf_thicken.scad>;
+use </Users/gmilos/iCloudDrive/Projects/GardenPlanter/dotSCAD/src/path_extrude.scad>;
+use </Users/gmilos/iCloudDrive/Projects/GardenPlanter/dotSCAD/src/bezier_curve.scad>;
+use </Users/gmilos/iCloudDrive/Projects/GardenPlanter/dotSCAD/src/bend.scad>;
+use </Users/gmilos/iCloudDrive/Projects/GardenPlanter/Round-Anything/polyround.scad>;
+use </Users/gmilos/iCloudDrive/Projects/GardenPlanter/dotSCAD/src/surface/sf_thicken.scad>;
 
 // Next steps:
 // * figure out the desired ultimate shape
@@ -39,10 +39,11 @@ Calculations:
 * angle for each seat is: 90.57*2/8 = 22.6 degrees
 */
 
-tmp_reduction_factor=1;
-bench_front_angle=90.5682 * 2/tmp_reduction_factor;
-bench_back_angle=69.4313 * 2/tmp_reduction_factor;
-number_of_seats=8/tmp_reduction_factor;
+quality_factor=1; /* Increase higher for final redering */
+cylinder_frags=5*360;
+bench_front_angle=90.5682 * 2;
+bench_back_angle=69.4313 * 2;
+number_of_seats=8;
 seat_angle=bench_front_angle / number_of_seats;
 inner_bench_wall_radius=1670;
 outer_bench_wall_radius=2120;
@@ -51,7 +52,10 @@ seat_overhang=25;
 base_back_hight_delta=25;
 base_thickness=18;
 additional_base_thickness=50;
-
+bench_height=80;
+seat_lip_height=25;
+base_z_adjustment=6;
+lip_smoothing_radius=10;
 
 module base_panel(additional_base_back_factor=2) {
 
@@ -84,16 +88,47 @@ module base_panel(additional_base_back_factor=2) {
 
 
     rotate([base_front_back_angle, 0, 0]) {
+        
         difference() {
             translate([0,0,-base_thickness])
             polyhedron(base_points, base_faces);
+            
 
-            translate([0,-cos(seat_angle/2)*(inner_bench_wall_radius-base_overhang),0]) {
-                cylinder(h=300,r1=inner_bench_wall_radius-base_overhang, r2=inner_bench_wall_radius-base_overhang,center=true, $fn=5*360);
+            union() {
+                translate([0,-cos(seat_angle/2)*(inner_bench_wall_radius-base_overhang),0]) {
+                    cylinder(h=300,r1=inner_bench_wall_radius-base_overhang, r2=inner_bench_wall_radius-base_overhang,center=true, $fn=cylinder_frags);
+                }
+            
+                smoothing_radius=9.5;
+                translate([0,-cos(seat_angle/2)*(inner_bench_wall_radius-base_overhang)+smoothing_radius,-smoothing_radius])
+                rotate([0,0,90-seat_angle*1.1/2])            
+                rotate_extrude(angle=seat_angle*1.1,$fn = quality_factor*cylinder_frags *seat_angle*1.1/360 )
+                translate([inner_bench_wall_radius-base_overhang, 0, 0])
+                rotate([0,0,90])
+                difference() {
+                    square(size = [2*smoothing_radius, 2*smoothing_radius], center = false);
+                    circle(r = smoothing_radius);
+                }
+
+            }
+        }
+    
+        if (quality_factor > 1) {
+            translate([0,-cos(seat_angle/2)*(inner_bench_wall_radius-base_overhang)+lip_smoothing_radius,+lip_smoothing_radius-seat_lip_height-base_z_adjustment])
+            rotate([0,0,90-seat_angle*1.1/2])            
+            rotate_extrude(angle=seat_angle*1.1,$fn = quality_factor*cylinder_frags *seat_angle*1.1/360)
+            translate([inner_bench_wall_radius-base_overhang-2*lip_smoothing_radius+1 /*botch, but not sure how to get rid of the step otherwise */, -2, 0])
+            rotate([0,0,-90])
+            difference() {
+                square(size = [2*lip_smoothing_radius, 2*lip_smoothing_radius], center = false);
+                circle(r = lip_smoothing_radius);
             }
         }
     }
 }
+
+//base_panel();
+
 
 module single_base() {
     translate([0,cos(seat_angle/2)*(inner_bench_wall_radius-base_overhang),0]) {
@@ -111,10 +146,6 @@ module base() {
 //base();
 
 
-
-
-bench_height=80;
-seat_lip_height=25;
 seat_back_width=2*PI*outer_bench_wall_radius*seat_angle/360;
 
 
@@ -162,7 +193,7 @@ module seat_flow() {
 }
 
 module bent_seat_flow() {
-    bend_frags=5*24;
+    bend_frags=quality_factor*24;
     bend_frag_width = seat_back_width / bend_frags;
     bend_frag_angle = seat_angle / bend_frags;
     bend_half_frag_width = 0.5 * bend_frag_width;
@@ -203,7 +234,7 @@ ctrl_pts = [
 ];
 
 thickness = 60;
-t_step = 0.01;
+t_step = 0.05/quality_factor;
 
 bezier_pts = [for(i = [0:len(ctrl_pts) - 1]) 
     bezier_curve(t_step, ctrl_pts[i])
@@ -238,17 +269,44 @@ module single_seat_no_base() {
     translate([0,-outer_bench_wall_radius,0])   
     difference() {
         translate([0,outer_bench_wall_radius,0])   
-            single_seat_minkowski_smoothed();
+            single_seat();
 
-        scale([1.01,1,1])    
-        translate([0,0,6])
-            single_base();
+        union() {
+            scale([1.005,1,1])    
+            translate([0,0,base_z_adjustment])
+                single_base();
+
+            translate([0,0,lip_smoothing_radius-seat_lip_height])
+            rotate([0,0,90-seat_angle*1.1/2])            
+            rotate_extrude(angle=seat_angle*1.1,$fn = quality_factor*cylinder_frags *seat_angle*1.1/360)
+            translate([inner_bench_wall_radius-base_overhang-seat_overhang+lip_smoothing_radius, 0, 0])
+            rotate([0,0,180])
+            difference() {
+                square(size = [2*lip_smoothing_radius, 2*lip_smoothing_radius], center = false);
+                circle(r = lip_smoothing_radius);
+            }
+        }
     }
 }
 
-
-
 single_seat_no_base();
+
+
+/*
+number_slices=SLICE_COUNT;
+slice_number=SLICE_IDX;
+
+slice_angle=seat_angle/number_slices;
+
+echo("Seat angle: ", seat_angle);
+projection(cut = true)
+rotate([slice_angle*(number_slices/2-0.5-slice_number),0,0])
+translate([0,outer_bench_wall_radius,0])
+rotate([0,90,0])
+single_seat_no_base();
+*/
+
+
 /*
 minkowski() {
     single_seat_no_base();

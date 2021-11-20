@@ -39,7 +39,7 @@ Calculations:
 * angle for each seat is: 90.57*2/8 = 22.6 degrees
 */
 
-quality_factor=1; /* Increase higher for final redering */
+quality_factor=5; /* Increase higher for final redering */
 cylinder_frags=5*360;
 bench_front_angle=90.5682 * 2;
 bench_back_angle=69.4313 * 2;
@@ -289,10 +289,9 @@ module single_seat_no_base() {
     }
 }
 
-single_seat_no_base();
+//single_seat_no_base();
 
 
-/*
 number_slices=SLICE_COUNT;
 slice_number=SLICE_IDX;
 
@@ -304,7 +303,6 @@ rotate([slice_angle*(number_slices/2-0.5-slice_number),0,0])
 translate([0,outer_bench_wall_radius,0])
 rotate([0,90,0])
 single_seat_no_base();
-*/
 
 
 /*

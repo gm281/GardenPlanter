@@ -39,7 +39,7 @@ Calculations:
 * angle for each seat is: 90.57*2/8 = 22.6 degrees
 */
 
-quality_factor=5; /* Increase higher for final redering */
+quality_factor=1; /* Increase higher for final redering */
 cylinder_frags=5*360;
 bench_front_angle=90.5682 * 2;
 bench_back_angle=69.4313 * 2;
@@ -87,6 +87,8 @@ module base_panel(additional_base_back_factor=2) {
     ];
 
 
+    echo("base_front_back_angle: ", base_front_back_angle);
+    echo("total base width: ", (bench_front_back_diff+base_overhang)/cos(base_front_back_angle));
     rotate([base_front_back_angle, 0, 0]) {
         
         difference() {
@@ -289,8 +291,10 @@ module single_seat_no_base() {
     }
 }
 
-//single_seat_no_base();
+single_seat_no_base();
 
+/* 
+//For slicing, use with `script.sh` (these are saved in the v1.0/v2.0/... Renderings directories too
 
 number_slices=SLICE_COUNT;
 slice_number=SLICE_IDX;
@@ -303,187 +307,4 @@ rotate([slice_angle*(number_slices/2-0.5-slice_number),0,0])
 translate([0,outer_bench_wall_radius,0])
 rotate([0,90,0])
 single_seat_no_base();
-
-
-/*
-minkowski() {
-    single_seat_no_base();
-    sphere(r=2.5);
-}
 */
-
-/*
-for (i = [0:number_of_seats-1]) {
-    rotate([0,0,(-number_of_seats/2+0.5+i)*seat_angle]) {
-        translate([0,outer_bench_wall_radius,0])   
-            bent_seat_flow();
-    }
-}
-*/
-
-
-/*
-
-difference() {
-    for (i = [0:number_of_seats-1]) {
-        rotate([0,0,(-number_of_seats/2+0.5+i)*seat_angle]) {
-
-translate([-outer_bench_wall_radius,0,0])
-translate([0,0,bench_height])
-rotate([0,180,0])
-translate([-bend_r,0,0])
-rotate([0,0,-seat_angle/2])
-bend(size = [seat_back_width, bench_height+seat_lip_height, bench_width+base_overhang+seat_overhang], angle = seat_angle, frags=bend_frags)
-translate([0,bench_height,0])
-rotate([90,0,0])
-seat_flow();
-            
-        }}
-rotate([0,0,90])        
-base();
-    }
-*/
-
-// Next steps:
-// * figure out how to move to the origin + align with axis
-// * scale the size of the seat so that it takes up the expected amount of space (this will likely be the same task as the above, as the radius of the bend will need to be matched). Start with this. Look at how bend.scad calculates the bend radius.
-
-/*
-ctrl_pts = [
-    [[0, 0, 20],  [60, 0, -35],   [90, 0, 60],    [200, 0, 5]],
-    [[0, 50, 30], [100, 60, -25], [120, 50, 120], [200, 50, 5]],
-    [[0, 100, 0], [60, 120, 35],  [90, 100, 60],  [200, 100, 45]],
-    [[0, 150, 0], [60, 150, -35], [90, 180, 60],  [200, 150, 45]]
-];
-
-thickness = 2;
-t_step = 0.05;
-
-bezier_pts = [for(i = [0:len(ctrl_pts) - 1]) 
-    bezier_curve(t_step, ctrl_pts[i])
-]; 
-
-g_pts = [for(j = [0:len(bezier_pts[0]) - 1]) 
-    bezier_curve(t_step, 
-        [for(i = [0:len(bezier_pts) - 1]) bezier_pts[i][j]]
-    ) 
-];
-
-sf_thicken(g_pts, thickness);
-*/
-
-
-/*
-// This is what I've sent to Tomek:
-outer_bench_wall_radius=2120;
-bench_width=450;
-bench_extra_width=30;
-bench_height=30;
-bench_base_overhang=20;
-
-
-
-bench_cross_section_points=[
-[0,-bench_base_overhang/2,0],
-[bench_width, -bench_base_overhang/2,0],
-[bench_width, -bench_base_overhang,0],
-[bench_width+bench_extra_width, -bench_base_overhang,10],
-[bench_width+bench_extra_width, bench_height,20],
-[0, bench_height,0],
-];
-
-shape_pts=polyRound(bench_cross_section_points,100);
-
-projection(cut = true)
-rotate([0,10,0])
-rotate([90,0,0])
-
-difference() {
-rotate_extrude(angle=90, convexity=10, $fn=500)
-translate([outer_bench_wall_radius, 0]) 
-polygon(points=shape_pts);
-    
-rotate_extrude(angle=90, convexity=10, $fn=500)
-translate([outer_bench_wall_radius, 0]) 
-translate([bench_width/2, bench_height*2])
-scale([1*bench_width,2*(bench_height+bench_base_overhang)])
-circle(r=0.5,$fn=200);
-}
-*/
-
-
-/*
-projection(cut = true)
-rotate([0,10,0])
-rotate([90,0,0])
-*/
-/*
-rotate_extrude(angle=90, convexity=10, $fn=500)
-translate([outer_bench_wall_radius, 0]) 
-polygon(points=shape_pts);
-*/
-
-
-
-
-
-
-/*
-t_step_1 = 0.05;
-t_step_2 = 0.005;
-width = 2;
-
-p0 = [0, 0, 0];
-p1 = [40, 60, 35];
-p2 = [-50, 70, 0];
-p3 = [20, 150, -35];
-p4 = [30, 50, -3];
-
-shape_pts = 
-bezier_curve(t_step_1,
-[   
-    [5, -5],
-    [3, 4],
-    [0, 5],
-    [-5, -5] 
-]
-);
-
-path_pts = bezier_curve(t_step_2, 
-    [p0, p1, p2, p3, p4]
-);
-
-
-
-projection(cut = true)
-rotate([0,40,0])
-path_extrude(shape_pts, path_pts);
-*/
-
-
-/*
-
-
-
-outer_bench_wall_radius=2120;
-bench_width=450;
-bench_extra_width=30;
-bench_height=30;
-bench_base_overhang=20;
-
-
-
-bench_cross_section_points=[
-[0,-bench_base_overhang],
-[bench_width+bench_extra_width, -bench_base_overhang],
-[bench_width+bench_extra_width, bench_height],
-[0, bench_height],
-];
-
-
-
-rotate_extrude(angle=270, convexity=10, $fn=200)
-translate([outer_bench_wall_radius, 0]) 
- polygon(points=bench_cross_section_points);
- 
- */
